@@ -2,6 +2,7 @@ import { useEffect } from "preact/hooks";
 import { getStore } from "../state.ts";
 import { loadCodeFromString } from "../loadCodeFromString.ts";
 import { toolkit as tk } from "../drawingToolkit/toolkit.js";
+import { post } from "../post.js";
 
 export default function DropBox() {
   useEffect(() => {
@@ -70,11 +71,8 @@ function addDragDrop() {
 
         customAlert(polylines);
 
-        // const newLines = `const importedSVG = ${polylines};\n`;
-
-        // view.dispatch({
-        //   changes: { from: 0, insert: newLines },
-        // });
+        // Send the SVG data to the backend
+        sendSVGToBackend(polylines);
       } else {
         throw Error("Unknown extension:" + extension);
       }
@@ -221,4 +219,28 @@ function scaleAlert(polylines) {
   })
 
   document.body.append(el);
+}
+
+async function sendSVGToBackend(polylines) {
+  const { loginName, sessionKey } = getStore();
+
+  if (loginName === "") {
+    alert("Log in to upload SVG files.");
+    return;
+  }
+
+  const [res, err] = await post("/save-file", {
+    sessionKey,
+    email: loginName,
+    file: polylines,
+    name: "uploadedSVG",
+    fileId: null
+  });
+
+  if (err) {
+    console.log(err);
+    return;
+  }
+
+  console.log("SVG data sent to backend:", res);
 }
