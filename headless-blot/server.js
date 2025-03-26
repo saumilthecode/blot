@@ -187,3 +187,36 @@ app.message(async ({ message, say }) => {
   }
 })
 
+// Add functionality to process SVG files and instruct the blot to draw them
+app.post('/process-svg', async (req, res) => {
+  try {
+    const { svgData } = req.body;
+
+    // Convert SVG data to polylines
+    const polylines = JSON.parse(svgData);
+
+    // Generate code to draw the polylines
+    const code = `
+      const polylines = ${JSON.stringify(polylines)};
+      drawLines(polylines);
+    `;
+
+    const turtles = await runSync(code);
+
+    let filename = await webCam.startEvent();
+    filename = webCam.filePath + '/' + filename;
+
+    await runMachine(turtles);
+    await webCam.endEvent();
+
+    await sendSlackFile(req.body.channel, filename + '.mkv');
+    await sendSlackFile(req.body.channel, filename + '.jpg');
+
+    res.status(200).send({ message: 'SVG processed and drawing started.' });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({ error: error.message });
+  } finally {
+    await resetMachine();
+  }
+});

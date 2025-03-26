@@ -1,6 +1,7 @@
 import checkValidSession from "./checkValidSession.js";
 import { supabase } from "./supabase.js";
 import { PostHog } from "posthog-node";
+import { toolkit as tk } from "../../src/drawingToolkit/toolkit.js";
 
 const client = await new PostHog(process.env.POSTHOG_API_KEY, {
   host: "https://us.i.posthog.com",
